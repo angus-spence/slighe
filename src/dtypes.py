@@ -31,7 +31,7 @@ class ServiceTypes(Enum):
 class CorridorLoadMethod(Enum):
     from_csv = 1
 
-@dataclass
+@dataclass(frozen=True)
 class Stop:
     stop_id: str
     stop_name: str
@@ -40,22 +40,21 @@ class Stop:
     settlement: str
     county: str
 
-    def __str__(self) -> str:
-        return f'{self.stop_id}: {self.stop_name.upper()} IN {self.settlement.upper()}'
+    def __str__(self) -> str: return f'{self.stop_id}: {self.stop_name.upper()} IN {self.settlement.upper()}'
     
-@dataclass
+@dataclass(frozen=True)
 class StopTime: 
     stop_id: str
     arrival_time: float
     departure_time: float
 
-    def __str__(self) -> str:
-        return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}'
+    def __str__(self) -> str: return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}'
 
 @dataclass
 class Trip:
     trip_id: str
     route_id: str
+    direction_id: int
     stops: list[Stop]
     stop_times: list[StopTime]
     stop_sequence: dict[Stop: int]
@@ -75,15 +74,3 @@ class Corridor:
     corridor_name: str
     stops: list[Stop] = field(default_factory=list)
     routes: list[Route] = field(default_factory=list)
-
-    def __contains__(self, service) -> bool:
-        return service in self.routes
-
-    def _get_frequency(self, start_time: str, end_time: str, day_of_week: DayOfWeek) -> list:
-        return
-
-    def _build_timetable(self) -> ...:
-        return
-
-    def to_csv(self, path: str) -> None:
-        pass
