@@ -1,8 +1,6 @@
 import dtypes
 import dload
 
-import csv
-
 class StopBaseConstructor:
     def __init__(self, stop_ids: list[dtypes.Stop.stop_id], gtfs_loader: dload.BaseDataLoader) -> None: self.stop_ids = stop_ids; self.gtfs_loader = gtfs_loader
     def __call__(self) -> list[dtypes.Stop]: self._load()
@@ -11,7 +9,7 @@ class StopBaseConstructor:
 class StopTimeBaseConstructor:
     def __init__(self, trip_id: dtypes.Trip.trip_id, gtfs_loader: dload.BaseDataLoader) -> None: self.trip_id = trip_id; self.gtfs_loader = gtfs_loader
     def __call__(self) -> list[dtypes.StopTime]: self._load()
-    def _load(self) -> list[dtypes.StopTime]: return [dtypes.Stop(row['stop_id'], row['arrival_time'], row['departure_time']) for row in self.gtfs_loader. if row['trip_id'] in self.trip_id]
+    def _load(self) -> list[dtypes.StopTime]: return [dtypes.Stop(row['stop_id'], row['arrival_time'], row['departure_time']) for row in self.gtfs_loader.stop_times if row['trip_id'] in self.trip_id]
 
 class TripBaseConstructor:
     def __init__(self, route_ids: list[dtypes.Route.route_id], gtfs_loader: dload.BaseDataLoader) -> None: self.route_ids = route_ids; self.gtfs_loader = gtfs_loader
@@ -25,19 +23,16 @@ class StopSequenceConstructor:
     def __call__(self) -> dict[dtypes.Stop.stop_id: int]: return self._load_from_csv()
 
 class RouteConstructor:
-    def __init__(self, route_ids: list[dtypes.Route.route_id], gtfs_loader: dload.BaseDataLoader) -> None: self.route_ids = route_ids; self.route_csv_path = route_csv_path
-    def __call__(self) -> list[dtypes.Route]: self._load_from_csv()
-    def _load_from_csv(self) -> list[dtypes.Route]:
-        with open(self.route_csv_path, 'r') as csv_file:
-            reader = csv.DictReader(csv_file)
-            return [dtypes.Route(row['route_id'], row['agency_id'], row['route_short_name'], row['route_long_name'])]
+    def __init__(self, route_ids: list[dtypes.Route.route_id], gtfs_loader: dload.BaseDataLoader) -> None: self.route_ids = route_ids; self.gtfs_loader = gtfs_loader
+    def __call__(self) -> list[dtypes.Route]: self._load()
+    def _load(self) -> list[dtypes.Route]: return [dtypes.Route(row['route_id'], row['agency_id'], row['route_short_name'], row['route_long_name'], row['route_type'], TripBaseConstructor(self.route_ids, self.gtfs_loader)) for row in self.gtfs_loader.routes if row['route_id'] in self.route_ids]
 
 class CorridorConstructor:
     def __init__(self, corridor_id: int, route_ids: list[dtypes.Route.route_id]) -> None: self.corridor_id = corridor_id; self.route_ids = route_ids
     def __call__(self) -> dtypes.Corridor: return dtypes.Corridor(self.corridor_id, StopBaseConstructor(self.stop_ids))
-    def _collect_routes(self, reader: csv.DictReader) -> list[dtypes.Route]: RouteConstructor(self.route_ids, self.route_csv_path)
 
 
 
 if __name__ == "__main__":
-    RouteConstructor([])
+    loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
+    CorridorConstructor(1, ['2991_37732', '2991_37732'])()
