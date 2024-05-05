@@ -28,9 +28,6 @@ class ServiceTypes(Enum):
     MON_THU_SAT = 13
     TUE_THU = 14
 
-class CorridorLoadMethod(Enum):
-    from_csv = 1
-
 @dataclass(frozen=True)
 class Stop:
     stop_id: str
@@ -72,5 +69,10 @@ class Route:
 class Corridor:
     corridor_id: int
     corridor_name: str
-    stops: list[Stop] = field(default_factory=list)
-    routes: list[Route] = field(default_factory=list)
+    stops: list[Stop]
+    routes: list[Route]
+
+@dataclass
+class Timetable:
+    stops: list[Stop]
+    trips: list[Trip]

@@ -9,6 +9,15 @@ class GTFSLoadMethod(Enum):
     from_sqlite = 3
     from_transxchange = 4
 
+class LoadCSVFiles(Enum):
+    AGENCY = 1
+    CALENDAR = 2
+    CALENDAR_DATES = 3
+    ROUTES = 4
+    STOP_TIMES = 5
+    STOPS = 6
+    TRIPS = 7
+
 @dataclass
 class BaseDataLoader: 
     load_method: GTFSLoadMethod
@@ -25,32 +34,18 @@ class GTFSLoadCSV(BaseDataLoader):
         self.trips_path = trips_path
         if not self._validate_paths(): raise FileNotFoundError('One or more paths do not exist') 
         self.paths = [path for path in self.__dict__.values() if str(path).endswith('.csv')]
-        self.agency = self._agency_load()
-        self.calendar = self._calendar_load()
-        self.calendar_dates = self._calendar_dates_load()
-        self.routes = self._routes_load()
-        self.stop_times = self._stop_times_load()
-        self.stops = self._stops_load()
-        self.trips = self._trips_load()
-    def __call__(self) -> None: self.load()
-    def _validate_paths(self) -> None: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
-    def _agency_load(self) -> csv.DictReader: return self._load_csv(self.agency_path)
-    def _calendar_load(self) -> csv.DictReader: return self._load_csv(self.calendar_path)
-    def _calendar_dates_load(self) -> csv.DictReader: return self._load_csv(self.calendar_dates_path)
-    def _routes_load(self) -> csv.DictReader: return self._load_csv(self.routes_path)
-    def _stop_times_load(self) -> csv.DictReader: return self._load_csv(self.stop_times_path)
-    def _stops_load(self) -> csv.DictReader: return self._load_csv(self.stops_path)
-    def _trips_load(self) -> csv.DictReader: return self._load_csv(self.trips_path)
-    def _load_csv(self, path: str) -> csv.DictReader:
-        with open(path, 'r') as csv_file: return csv.DictReader(csv_file)
-
+    def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
+    def _validate_paths(self) -> bool: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
     
-
-
-
-
+    #TODO: CHANGE THIS METHOD -> NEEDS TO KEEP THE FILE OPEN AND NOT REOPEN IT EVERYTIME
+    
+    def _base_load(self, file: LoadCSVFiles) -> ...:
+        f = open(self.paths[file.value - 1], 'r', encoding='utf_8', errors='ignore')
+        self._loaded = True
+        return f
+    def load(self, file: LoadCSVFiles) -> csv.DictReader: 
+        if not hasattr(self, '_loaded'): f = self._base_load(file); print('opening')
+        return csv.DictReader(f)
 
 if __name__ == "__main__":
     gtfs_loader = GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
-    print(gtfs_loader.paths)
-    #print(gtfs_loader.paths)
