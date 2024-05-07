@@ -43,8 +43,7 @@ class GTFSLoadCSV(BaseDataLoader):
         self._loaded[file] = 1
         print(f"loaded: {self.paths[file.value - 1]}")
     def load(self, file: LoadCSVFiles) -> csv.DictReader: 
-        if self._loaded[file] != 1: 
-            self._base_load(file)
+        if self._loaded[file] != 1: self._base_load(file)
         return self._csv_files[file]
 
 if __name__ == "__main__":
