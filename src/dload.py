@@ -39,12 +39,13 @@ class GTFSLoadCSV(BaseDataLoader):
     def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
     def _validate_paths(self) -> bool: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
     def _base_load(self, file: LoadCSVFiles) -> ...:
-        self._csv_files[file] = open(self.paths[file.value - 1], 'r', errors='ignore', encoding='utf-8')
+        self._csv_files[file] = csv.DictReader(open(self.paths[file.value - 1], 'r', errors='ignore', encoding='utf-8'))
         self._loaded[file] = 1
         print(f"loaded: {self.paths[file.value - 1]}")
     def load(self, file: LoadCSVFiles) -> csv.DictReader: 
-        if self._loaded[file] != 1: self._base_load(file)
-        return csv.DictReader(self._csv_files[file])
+        if self._loaded[file] != 1: 
+            self._base_load(file)
+        return self._csv_files[file]
 
 if __name__ == "__main__":
     gtfs_loader = GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')

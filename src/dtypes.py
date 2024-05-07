@@ -47,7 +47,7 @@ class StopTime:
 
     def __str__(self) -> str: return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}'
 
-@dataclass
+@dataclass(frozen=True)
 class Trip:
     trip_id: str
     route_id: str
@@ -56,7 +56,7 @@ class Trip:
     stop_times: list[StopTime]
     stop_sequence: dict[Stop: int]
 
-@dataclass
+@dataclass(frozen=True)
 class Route:
     route_id: str
     agency_id: str
@@ -65,14 +65,14 @@ class Route:
     route_type: int
     trips: list[Trip]
 
-@dataclass
+@dataclass(frozen=True)
 class Corridor:
     corridor_id: int
     corridor_name: str
     stops: list[Stop]
     routes: list[Route]
 
-@dataclass
+@dataclass(frozen=True)
 class Timetable:
     stops: list[Stop]
     trips: list[Trip]
