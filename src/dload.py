@@ -35,14 +35,14 @@ class GTFSLoadCSV(BaseDataLoader):
         if not self._validate_paths(): raise FileNotFoundError('One or more paths do not exist') 
         self.paths = {file: path for file, path in zip(LoadCSVFiles, self.__dict__.values()) if str(path).endswith('.csv')}
         
-        self._files = {file: None for file in LoadCSVFiles}
+        # TODO: LOAD CSV FILES TO MEMORY FOR NOW -> WE WOULD PREFER TO OPEN ONCE AND READ ONLY REQUIRED
 
     def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
     
     def _validate_paths(self) -> bool: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
-    
+
     def load(self, file: LoadCSVFiles) -> csv.DictReader:
         return self.csv_files[file]
-                
+
 if __name__ == "__main__":
     gtfs_loader = GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
