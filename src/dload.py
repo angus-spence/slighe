@@ -5,6 +5,7 @@ import csv
 from dataclasses import dataclass
 from enum import Enum
 from typing import overload
+from itertools import chain
 
 class GTFSLoadMethod(Enum):
     from_csv = 1
@@ -30,19 +31,28 @@ class BaseDataLoader:
 
 class GTFSLoadCSV(BaseDataLoader):
     def __init__(self, agency_path: str, calendar_path: str, calendar_dates_path: str, routes_path: str, stop_times_path: str, stops_path: str, trips_path: str) -> None:
-        super().__init__(GTFSLoadMethod.from_csv)
         self.agency_path, self.calendar_path, self.calendar_dates_path, self.routes_path, self.stop_times_path, self.stops_path, self.trips_path = agency_path, calendar_path, calendar_dates_path, routes_path, stop_times_path, stops_path, trips_path
+        super().__init__(GTFSLoadMethod.from_csv)
         if not self._validate_paths(): raise FileNotFoundError('One or more paths do not exist') 
         self.paths = {file: path for file, path in zip(LoadCSVFiles, self.__dict__.values()) if str(path).endswith('.csv')}
-        
+        self.csv_files = {file: [] for file in LoadCSVFiles}
+        self._to_memory()
+
         # TODO: LOAD CSV FILES TO MEMORY FOR NOW -> WE WOULD PREFER TO OPEN ONCE AND READ ONLY REQUIRED
 
     def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
     
     def _validate_paths(self) -> bool: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
 
+    def _to_memory(self) -> ...:
+        for file, path in self.paths.items():
+            with open(path, 'r', errors='ignore') as f:
+                reader = csv.DictReader(f)
+                self.csv_files[file] = [row for row in reader]
+
     def load(self, file: LoadCSVFiles) -> csv.DictReader:
         return self.csv_files[file]
 
 if __name__ == "__main__":
     gtfs_loader = GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
+    print(gtfs_loader.csv_files[LoadCSVFiles.STOPS])

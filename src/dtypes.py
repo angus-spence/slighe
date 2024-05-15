@@ -52,6 +52,7 @@ class Trip:
     trip_id: str
     route_id: str
     direction_id: int
+    service_id: int
     stops: list[Stop]
     stop_times: list[StopTime]
     stop_sequence: dict[Stop: int]
