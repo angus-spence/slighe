@@ -31,11 +31,6 @@ def frequency(stop: dtypes.Stop,
     """
     return _frequency(_get_stop_times(stop, service_type, routes), start, end)
 
-class CorridorOps:
-    def __init__(self, corridor: dtypes.Corridor) -> None: self.corridor = corridor
-    def stop_frequency(self, start: float, end: float, day_of_week: dtypes.ServiceTypes) -> list[float]: return NotImplementedError
-    def build_timetable(self) -> ...: NotImplementedError
-
 if __name__ == "__main__":
     import constructors, dload
     loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')

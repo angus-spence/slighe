@@ -1,7 +1,6 @@
 import transforms
 
 import time
-import datetime
 from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -30,6 +29,16 @@ class ServiceTypes(Enum):
     MON_SUN = 11
     MON_THU_SAT = 13
     TUE_THU = 14
+    MON_PLUS_SUN = 15
+    SAT_SUN = 16
+    MON_PLUS_FRI = 17
+    MON_PLUS_FRI_PLUS_SAT = 18
+    FRI_SAT = 19
+    FRI_SUN = 20
+    TUE_PLUS_THU = 21
+    MON_FRI_PLUS_SUN = 25
+    FRI_PLUS_SUN = 27
+    TUE_FRI = 28
 
 @dataclass(frozen=True)
 class Stop:
@@ -44,6 +53,7 @@ class Stop:
     
 @dataclass
 class StopTime: 
+    trip_id: str
     stop_id: str
     arrival_time: Optional[Union[str, float]]
     departure_time: Optional[Union[str, float]]
@@ -74,7 +84,6 @@ class Route:
 class Corridor:
     corridor_id: int
     corridor_name: str
-    stops: list[Stop]
     routes: list[Route]
 
 @dataclass(frozen=True)
