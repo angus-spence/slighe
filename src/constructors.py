@@ -1,5 +1,6 @@
 import dtypes
 import dload
+import _context
 
 class StopBaseConstructor:
     def __init__(self, stop_ids: list[dtypes.Stop], gtfs_loader: dload.BaseDataLoader) -> None: self.stop_ids, self.gtfs_loader = stop_ids, gtfs_loader
@@ -17,6 +18,7 @@ class TripBaseConstructor:
     def __call__(self) -> list[dtypes.Trip]: return self.build()
     def _call_trip_ids(self) -> list: return [row['trip_id'] for row in self.gtfs_loader.load(dload.LoadCSVFiles.TRIPS) if row['route_id'] in self.route_ids] 
     def _call_stop_ids(self) -> list: return [row['stop_id'] for row in self.gtfs_loader.load(dload.LoadCSVFiles.STOP_TIMES) if row['trip_id'] in self._trip_ids]
+    @_context.timing(f'TripBaseConstructor.build')
     def build(self) -> list[dtypes.Trip]: return [dtypes.Trip(row['trip_id'], row['route_id'], row['direction_id'], int(row['service_id']), StopBaseConstructor(self._stop_ids, self.gtfs_loader).build(), StopTimeBaseConstructor(self._trip_ids, self.gtfs_loader).build(), None) for row in self.gtfs_loader.load(dload.LoadCSVFiles.TRIPS) if row['route_id'] in self.route_ids]
 
 class StopSequenceConstructor:
@@ -37,4 +39,3 @@ class CorridorConstructor:
 if __name__ == "__main__":
     loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
     p = RouteConstructor(['2991_37732'], loader).build()
-    print(p[0])

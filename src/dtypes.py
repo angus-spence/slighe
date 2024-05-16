@@ -1,7 +1,10 @@
+import transforms
+
 import time
-import csv
+import datetime
 from enum import Enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Optional, Union
 
 class DayOfWeek(Enum):
     MON = 0
@@ -39,14 +42,15 @@ class Stop:
 
     def __str__(self) -> str: return f'{self.stop_id}: {self.stop_name.upper()} IN {self.settlement.upper()}'
     
-@dataclass(frozen=True)
+@dataclass
 class StopTime: 
     stop_id: str
-    arrival_time: float
-    departure_time: float
+    arrival_time: Optional[Union[str, float]]
+    departure_time: Optional[Union[str, float]]
 
-    def __str__(self) -> str: return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}'
-
+    def __str__(self) -> str: return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}' #TODO: THIS WONT WORK FOR STR AND DATETIME TYPES
+    def timestring_to_float(self) -> None: self.arrival_time, self.departure_time = transforms.ts_to_float(self.arrival_time, "%H:%M:%S"), transforms.ts_to_float(self.departure_time, "%H:%M:%S")
+        
 @dataclass(frozen=True)
 class Trip:
     trip_id: str
