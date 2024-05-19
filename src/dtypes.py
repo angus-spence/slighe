@@ -1,6 +1,5 @@
-import transforms
+from transforms import TimeTransforms
 
-import time
 from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -51,15 +50,20 @@ class Stop:
 
     def __str__(self) -> str: return f'{self.stop_id}: {self.stop_name.upper()} IN {self.settlement.upper()}'
     
-@dataclass
+@dataclass(frozen=True)
 class StopTime: 
     trip_id: str
     stop_id: str
     arrival_time: Optional[Union[str, float]]
     departure_time: Optional[Union[str, float]]
 
-    def __str__(self) -> str: return f'ARRIVAL TIME: {time.strftime("%H:%M:%S", self.arrival_time)}\nDEPARTURE TIME: {time.strftime("%H:%M:%S", self.departure_time)}' #TODO: THIS WONT WORK FOR STR AND DATETIME TYPES
-    def timestring_to_float(self) -> None: self.arrival_time, self.departure_time = transforms.ts_to_float(self.arrival_time, "%H:%M:%S"), transforms.ts_to_float(self.departure_time, "%H:%M:%S")
+    def __str__(self) -> str: return f'ARRIVAL TIME: {self.arrival_time}\nDEPARTURE TIME: {self.departure_time}' #TODO: THIS WONT WORK FOR STR AND DATETIME TYPES
+    def __lt__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) < TimeTransforms.ts_val(other.arrival_time)
+    def __gt__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) > TimeTransforms.ts_val(other.arrival_time)
+    def __eq__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) == TimeTransforms.ts_val(other.arrival_time)
+    def __le__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) <= TimeTransforms.ts_val(other.arrival_time)
+    def __ge__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) >= TimeTransforms.ts_val(other.arrival_time)
+    def timestring_to_float(self) -> None: self.arrival_time, self.departure_time = TimeTransforms.ts_to_float(self.arrival_time, "%H:%M:%S"), TimeTransforms.ts_to_float(self.departure_time, "%H:%M:%S")
         
 @dataclass(frozen=True)
 class Trip:

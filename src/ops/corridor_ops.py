@@ -28,7 +28,7 @@ class Timetable:
         unique_trips = list(set([stoptime.trip_id for stoptime in stop_times]))
         cols = [self._trip_column(stop_times, trip) for trip in unique_trips]
         self._struct = {stop.stop_id: {trip: cols[i][j] for i, trip in enumerate(unique_trips)} for j, stop in enumerate(stops)}
-        
+        print(self._struct)
 
     def _trip_column(self, stops: list[StopTime], trip_id: str) -> list[str]:
         if not isinstance(stops[0], StopTime): raise TypeError(f'stops: {type(stops[0])} is not StopTime')
@@ -36,7 +36,7 @@ class Timetable:
 
     def to_csv(self, path: str) -> None:
         with open(path, 'w') as f:
-            writer = csv.DictWriter(f, fieldnames=['stop_id', str(trip) for trip in self._struct.keys()]) #TODO: FIX THIS
+            writer = csv.DictWriter(f, fieldnames=['stop_id', *(str(trip) for trip in self._struct.keys())]) #TODO: FIX THIS
             writer.writeheader()
             for stop_id, trips in self._struct.items():
                 writer.writerow({'stop_id': stop_id, **trips})
