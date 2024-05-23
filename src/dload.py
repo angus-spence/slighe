@@ -1,17 +1,17 @@
-import dtypes
-
 import os
 import csv
+import functools
+import multiprocessing as mp
 from dataclasses import dataclass
 from enum import Enum
-from typing import overload
-from itertools import chain
+from typing import Optional, Union, overload
 
 class GTFSLoadMethod(Enum):
     from_csv = 1
-    from_postgres = 2
-    from_sqlite = 3
-    from_transxchange = 4
+    from_gtfs = 2
+    from_postgres = 3
+    from_sqlite = 4
+    from_transxchange = 5
 
 class LoadCSVFiles(Enum):
     AGENCY = 1
@@ -36,15 +36,70 @@ class GTFSLoadCSV(BaseDataLoader):
         if not self._validate_paths(): raise FileNotFoundError('One or more paths do not exist') 
         self.paths = {file: path for file, path in zip(LoadCSVFiles, self.__dict__.values()) if str(path).endswith('.csv')}
         self.csv_files = {file: [] for file in LoadCSVFiles}
+        self.mp_get_chunks_cached = functools.lru_cache(maxsize=None)(self._mp_get_chunks) # NOT USING LRU_CACHE ON CLASS METHOD AS CLASS INSTANCE CANNOT BE GARBAGED COLLECTED
         self._to_memory()
-
-        # TODO: LOAD CSV FILES TO MEMORY FOR NOW -> WE WOULD PREFER TO OPEN ONCE AND READ ONLY REQUIRED
 
     def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
     
     def _validate_paths(self) -> bool: return all([os.path.exists(path) for path in self.__dict__.values() if str(path).endswith('.csv')])
 
-    def _to_memory(self) -> ...:
+    def _mp_get_chunks(self, file_path: str, max_cpu: int = 8) -> list:
+        cpu_count = min(max_cpu, mp.cpu_count())
+        file_size = os.path.getsize(file_path)
+        chunk_size = file_size // cpu_count
+        start_end = []
+        with open(file_path, "r+b") as f:
+
+            def is_new_line(position) -> Optional[Union[bool, str]]:
+                if position == 0: return True
+                else: 
+                    f.seek(position -1)
+                    return f.read(1) == b"\n"
+
+            def next_line(position) -> ...:
+                f.seek(position)
+                f.readline()
+                return f.tell()
+            
+            chunk_start = 0
+            while chunk_start < file_size:
+                chunk_end = min(file_path, chunk_start + chunk_size)
+                while not is_new_line(chunk_end): chunk_end -= 1
+                if chunk_start == chunk_end: chunk_end = next_line(chunk_end)
+
+                start_end.append((file_path, chunk_start, chunk_end))
+
+            chunk_start = chunk_end
+    
+        return cpu_count, start_end
+
+    def _mp_file_open(self, file: LoadCSVFiles, cpu_count: int, start_end: list) -> None:
+        with mp.Pool(cpu_count) as p:
+            chunk_results: list[dict] = p.starmap(self._mp_file_chunk_read, start_end)
+            out = dict()
+            for chunk_result in chunk_results:
+                for dline in chunk_result.items():
+                    if dline[0] not in out: out[dline[0]] = [*dline[1:]]
+                    else: continue
+            self.csv_files[file] = out
+
+    def _mp_file_chunk_read(self, file_path: str, headers: tuple[str], chunk_start: int, chunk_end: int) -> dict:
+        out = dict()
+        with open(file_path, "rb") as f:
+            f.seek(chunk_start)
+            for line in f:
+                chunk_start += len(line)
+                if chunk_start > chunk_end: break
+                dline = line.split(b",")
+                if dline[0] not in out: out[dline[0]] = [*dline[1:]]
+                else: continue
+        return out
+                   
+    def _to_memory(self) -> None:
+        #TODO: IMPLEMENT MULTIPROCESSING FOR FILE READ
+        #for file, path, in self.paths.items():
+        #    self._mp_file_chunk_read(path, )
+        
         for file, path in self.paths.items():
             with open(path, 'r', errors='ignore') as f:
                 reader = csv.DictReader(f)

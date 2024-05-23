@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from typing import Optional, Union
 from itertools import chain
 import csv
+import functools
 
+#@functools.lru_cache(maxsize=None)
 def pull_stops(corridor: Corridor) -> list[Stop]:
     if not isinstance(corridor, Corridor): raise TypeError(f'corridor: {type(corridor)} is not Corridor')
     return list(chain.from_iterable(list(chain.from_iterable([[[trip.stops[i] for i in range(len(trip.stops))] for trip in route.trips] for route in corridor.routes]))))
 
+@functools.lru_cache(maxsize=None)
 def pull_stop_times(corridor: Corridor) -> list[StopTime]:
     if not isinstance(corridor, Corridor): raise TypeError(f'corridor: {type(corridor)} is not Corridor')
     return list(chain.from_iterable(list(chain.from_iterable([[[trip.stop_times[i] for i in range(len(trip.stop_times))] for trip in route.trips] for route in corridor.routes]))))
@@ -32,7 +35,7 @@ class Timetable:
 
     def _trip_column(self, stops: list[StopTime], trip_id: str) -> list[str]:
         if not isinstance(stops[0], StopTime): raise TypeError(f'stops: {type(stops[0])} is not StopTime')
-        return [stop.arrival_time if stop.trip_id == trip_id else 0 for stop in stops]
+        return [stop.arrival_time if stop.trip_id == trip_id and stop.arrival_time else 0 for stop in stops]
 
     def to_csv(self, path: str) -> None:
         with open(path, 'w') as f:
