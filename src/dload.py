@@ -1,6 +1,7 @@
+import _context
+
 import os
 import csv
-import functools
 import multiprocessing as mp
 from dataclasses import dataclass
 from enum import Enum
@@ -27,16 +28,15 @@ class BaseDataLoader:
     load_method: GTFSLoadMethod
 
     @overload
-    def load(self, file: LoadCSVFiles) -> csv.DictReader: ...
+    def load(self, file: LoadCSVFiles) -> dict: ...
 
 class GTFSLoadCSV(BaseDataLoader):
     def __init__(self, agency_path: str, calendar_path: str, calendar_dates_path: str, routes_path: str, stop_times_path: str, stops_path: str, trips_path: str) -> None:
         self.agency_path, self.calendar_path, self.calendar_dates_path, self.routes_path, self.stop_times_path, self.stops_path, self.trips_path = agency_path, calendar_path, calendar_dates_path, routes_path, stop_times_path, stops_path, trips_path
         super().__init__(GTFSLoadMethod.from_csv)
-        if not self._validate_paths(): raise FileNotFoundError('One or more paths do not exist') 
+        if not self._validate_paths(): raise FileNotFoundError(f'') 
         self.paths = {file: path for file, path in zip(LoadCSVFiles, self.__dict__.values()) if str(path).endswith('.csv')}
         self.csv_files = {file: [] for file in LoadCSVFiles}
-        self.mp_get_chunks_cached = functools.lru_cache(maxsize=None)(self._mp_get_chunks) # NOT USING LRU_CACHE ON CLASS METHOD AS CLASS INSTANCE CANNOT BE GARBAGED COLLECTED
         self._to_memory()
 
     def __call__(self, file: LoadCSVFiles) -> None: self.load(file)
@@ -61,51 +61,54 @@ class GTFSLoadCSV(BaseDataLoader):
                 f.readline()
                 return f.tell()
             
+            headers = [i.decode('utf8') for i in f.readline().rstrip(b"\r\n").split(b",")]
+
             chunk_start = 0
             while chunk_start < file_size:
-                chunk_end = min(file_path, chunk_start + chunk_size)
+                chunk_end = min(file_size, chunk_start + chunk_size)
                 while not is_new_line(chunk_end): chunk_end -= 1
                 if chunk_start == chunk_end: chunk_end = next_line(chunk_end)
 
                 start_end.append((file_path, chunk_start, chunk_end))
 
-            chunk_start = chunk_end
+                chunk_start = chunk_end
     
-        return cpu_count, start_end
+        return cpu_count, headers, start_end
 
-    def _mp_file_open(self, file: LoadCSVFiles, cpu_count: int, start_end: list) -> None:
-        with mp.Pool(cpu_count) as p:
-            chunk_results: list[dict] = p.starmap(self._mp_file_chunk_read, start_end)
-            out = dict()
-            for chunk_result in chunk_results:
-                for dline in chunk_result.items():
-                    if dline[0] not in out: out[dline[0]] = [*dline[1:]]
-                    else: continue
-            self.csv_files[file] = out
-
-    def _mp_file_chunk_read(self, file_path: str, headers: tuple[str], chunk_start: int, chunk_end: int) -> dict:
-        out = dict()
+    def _mp_file_chunk_read(self, file_path: str, chunk_start: int, chunk_end: int) -> dict:
+        out = []
         with open(file_path, "rb") as f:
             f.seek(chunk_start)
             for line in f:
                 chunk_start += len(line)
                 if chunk_start > chunk_end: break
-                dline = line.split(b",")
-                if dline[0] not in out: out[dline[0]] = [*dline[1:]]
-                else: continue
+                out.append(line.split(b","))
         return out
-                   
+
+    def _mp_file_process(self, file: LoadCSVFiles, cpu_count: int, headers: list[str], start_end: list) -> None:
+        with mp.Pool(cpu_count) as p:
+            chunk_results: list[dict] = p.starmap(self._mp_file_chunk_read, start_end)
+        out = []
+        for chunk_result in chunk_results:
+            for dline in chunk_result[1:]:
+                try: out.append(dict(zip(headers, [d.decode('utf8') for d in dline])))
+                except UnicodeDecodeError as e: print(f'WARNING: decode error in {file} -> {e}')
+        self.csv_files[file] = out
+
+    @_context.timing("LOG: CSV load")
     def _to_memory(self) -> None:
-        #TODO: IMPLEMENT MULTIPROCESSING FOR FILE READ
-        #for file, path, in self.paths.items():
-        #    self._mp_file_chunk_read(path, )
-        
-        for file, path in self.paths.items():
-            with open(path, 'r', errors='ignore') as f:
-                reader = csv.DictReader(f)
-                self.csv_files[file] = [row for row in reader]
+        for file, path, in self.paths.items():
+            if os.path.getsize(path) > 1e8:
+                print(f"LOG: Loading {path} with multiprocessing")
+                cpu_count, headers, *start_end = self._mp_get_chunks(path)
+                self._mp_file_process(file, cpu_count, headers, start_end[0])
+            else:
+                with open(path, 'r', errors='ignore') as f:
+                    reader = csv.DictReader(f)
+                    self.csv_files[file] = [row for row in reader]
 
     def load(self, file: LoadCSVFiles) -> csv.DictReader:
+        # TODO: BUILD AN OPTIMISER ALGO FOR THIS -> ITERATING THROUGH THE LIST TAKES TOO LONG -> PERHAPS PASSING A LAMBDA FNC TO LOAD()
         return self.csv_files[file]
 
 if __name__ == "__main__":

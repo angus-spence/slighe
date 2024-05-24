@@ -6,7 +6,7 @@ from itertools import chain
 import csv
 import functools
 
-#@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def pull_stops(corridor: Corridor) -> list[Stop]:
     if not isinstance(corridor, Corridor): raise TypeError(f'corridor: {type(corridor)} is not Corridor')
     return list(chain.from_iterable(list(chain.from_iterable([[[trip.stops[i] for i in range(len(trip.stops))] for trip in route.trips] for route in corridor.routes]))))
@@ -17,7 +17,7 @@ def pull_stop_times(corridor: Corridor) -> list[StopTime]:
     return list(chain.from_iterable(list(chain.from_iterable([[[trip.stop_times[i] for i in range(len(trip.stop_times))] for trip in route.trips] for route in corridor.routes]))))
 
 @dataclass(repr=False)
-class Timetable:
+class TimetableOps:
     corridor: Corridor
     service_types: list[ServiceTypes]
     settlement_filter: list[str] = None
@@ -48,6 +48,6 @@ if __name__ == "__main__":
     import constructors, dload
     loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
     c = constructors.CorridorConstructor('1', 'test', ['2991_37732', '2990_40267', '3038_40330'], loader).build()
-    t = Timetable(c, [ServiceTypes.MON_FRI])
+    t = TimetableOps(c, [ServiceTypes.MON_FRI])
     t("","")
     t.to_csv('./data/timetable.csv')
