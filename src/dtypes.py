@@ -2,7 +2,9 @@ from transforms import TimeTransforms
 
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Self
+from itertools import chain
+import csv
 
 class DayOfWeek(Enum):
     MON = 0
@@ -54,15 +56,16 @@ class Stop:
 class StopTime: 
     trip_id: str
     stop_id: str
+    stop_sequence: int
     arrival_time: Optional[Union[str, float]]
     departure_time: Optional[Union[str, float]]
 
     def __str__(self) -> str: return f'ARRIVAL TIME: {self.arrival_time}\nDEPARTURE TIME: {self.departure_time}' #TODO: THIS WONT WORK FOR STR AND DATETIME TYPES
-    def __lt__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) < TimeTransforms.ts_val(other.arrival_time)
-    def __gt__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) > TimeTransforms.ts_val(other.arrival_time)
-    def __eq__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) == TimeTransforms.ts_val(other.arrival_time)
-    def __le__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) <= TimeTransforms.ts_val(other.arrival_time)
-    def __ge__(self, other) -> bool: return TimeTransforms.ts_val(self.arrival_time) >= TimeTransforms.ts_val(other.arrival_time)
+    def __lt__(self, other: Self) -> bool: return TimeTransforms.ts_val(self.arrival_time) < TimeTransforms.ts_val(other.arrival_time)
+    def __gt__(self, other: Self) -> bool: return TimeTransforms.ts_val(self.arrival_time) > TimeTransforms.ts_val(other.arrival_time)
+    def __eq__(self, other: Self) -> bool: return TimeTransforms.ts_val(self.arrival_time) == TimeTransforms.ts_val(other.arrival_time)
+    def __le__(self, other: Self) -> bool: return TimeTransforms.ts_val(self.arrival_time) <= TimeTransforms.ts_val(other.arrival_time)
+    def __ge__(self, other: Self) -> bool: return TimeTransforms.ts_val(self.arrival_time) >= TimeTransforms.ts_val(other.arrival_time)
     def timestring_to_float(self) -> None: self.arrival_time, self.departure_time = TimeTransforms.ts_to_float(self.arrival_time, "%H:%M:%S"), TimeTransforms.ts_to_float(self.departure_time, "%H:%M:%S")
         
 @dataclass(frozen=True)
@@ -90,7 +93,36 @@ class Corridor:
     corridor_name: str
     routes: list[Route]
 
+    def pull_stops(self) -> list[Stop]: return list(chain.from_iterable(list(chain.from_iterable([[[trip.stops[i] for i in range(len(trip.stops))] for trip in route.trips] for route in self.routes]))))
+    def pull_stop_times(self) -> list[StopTime]: return list(chain.from_iterable(list(chain.from_iterable([[[trip.stop_times[i] for i in range(len(trip.stop_times))] for trip in route.trips] for route in self.routes]))))
+
 @dataclass(frozen=True)
-class Timetable:
+class TripTimetable:
     stops: list[Stop]
     trips: list[Trip]
+    data: list[dict]       
+
+    def filter_by(self, 
+                  time: tuple[Optional[Union[str, float]]] = None,
+                  service_type: list[ServiceTypes] = None,
+                  settlement: list[str] = None,
+                  county: list[str] = None
+                  ) -> ...:
+        """
+        Filter the timetable by time, settlement and county
+
+        time: tuple[Optional[Union[str, float]]] = None
+            time as a tuple of strings or floats for start and end times
+        settlement: list[str] = None
+            settlements to filter by
+        county: list[str] = None
+            counties to filter by
+        """
+        return NotImplementedError
+
+    def to_csv(self, file_path: str) -> ...:
+        with open(file_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=list(self.data[0].keys()))
+            writer.writeheader()
+            for row_data in self.data:
+                writer.writerow(row_data)

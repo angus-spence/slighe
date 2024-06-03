@@ -95,7 +95,7 @@ class GTFSLoadCSV(BaseDataLoader):
                 except UnicodeDecodeError as e: print(f'WARNING: decode error in {file} -> {e}')
         self.csv_files[file] = out
 
-    @_context.timing("LOG: CSV load")
+    @_context.timing("CSV load")
     def _to_memory(self) -> None:
         for file, path, in self.paths.items():
             if os.path.getsize(path) > 1e8:
