@@ -2,9 +2,10 @@ from transforms import TimeTransforms
 
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional, Union, Self
+from typing import Optional, Union, Self, Generator
 from itertools import chain
 import csv
+import re
 
 class DayOfWeek(Enum):
     MON = 0
@@ -95,11 +96,12 @@ class Corridor:
 
     def pull_stops(self) -> list[Stop]: return list(chain.from_iterable(list(chain.from_iterable([[[trip.stops[i] for i in range(len(trip.stops))] for trip in route.trips] for route in self.routes]))))
     def pull_stop_times(self) -> list[StopTime]: return list(chain.from_iterable(list(chain.from_iterable([[[trip.stop_times[i] for i in range(len(trip.stop_times))] for trip in route.trips] for route in self.routes]))))
+    def pull_trips(self) -> list[Trip]: return list(chain.from_iterable([route.trips for route in self.routes]))
 
 @dataclass(frozen=True)
 class TripTimetable:
     stops: list[Stop]
-    trips: list[Trip]
+    trip: Trip
     data: list[dict]       
 
     def filter_by(self, 
@@ -109,7 +111,7 @@ class TripTimetable:
                   county: list[str] = None
                   ) -> ...:
         """
-        Filter the timetable by time, settlement and county
+        Filter the timetable by time, settlement, service type and county
 
         time: tuple[Optional[Union[str, float]]] = None
             time as a tuple of strings or floats for start and end times
@@ -119,6 +121,46 @@ class TripTimetable:
             counties to filter by
         """
         return NotImplementedError
+    
+    def sort_by_time(self, ascending: bool = True) -> ...:
+        if ascending: self.data.sort(key=lambda x: TimeTransforms.ts_val(x['stop_time']))
+        else: self.data.sort(key=lambda x: TimeTransforms.ts_val(x['stop_time']), reverse=True)
+
+    def to_csv(self, file_path: str) -> ...:
+        with open(file_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=list(self.data[0].keys()))
+            writer.writeheader()
+            for row_data in self.data:
+                writer.writerow(row_data)
+
+@dataclass(frozen=True)
+class CorridorTimetable:
+    stops: list[Stop]
+    trips: list[Trip]
+    data: list[dict]
+
+    def filter_by(self, 
+                time: tuple[Optional[Union[str, float]]] = None,
+                service_type: list[ServiceTypes] = None,
+                settlement: list[str] = None,
+                county: list[str] = None
+                ) -> ...:
+        """
+        Filter the timetable by time, settlement, service type and county
+
+        time: tuple[Optional[Union[str, float]]] = None
+            time as a tuple of strings or floats for start and end times
+        settlement: list[str] = None
+            settlements to filter by
+        county: list[str] = None
+            counties to filter by
+        """
+        return NotImplementedError
+
+    def sort_by_time(self, ascending: bool = True) -> Self:
+        tf = re.compile(r'\d{2}:\d{2}:\d{2}')
+        row_mins = [min(TimeTransforms.ts_val(v) for v in row.values() if v is str and tf.match(v)) for row in self.data]
+        print(row_mins)
 
     def to_csv(self, file_path: str) -> ...:
         with open(file_path, 'w', newline='') as f:
