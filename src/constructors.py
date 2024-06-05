@@ -51,6 +51,7 @@ class TripTimetableConstructor:
                                     'settlement': stop.settlement,
                                     'county': stop.county,
                                     'stop_sequence': stop_time.stop_sequence,
+                                    'trip_id': stop_time.trip_id,
                                     'stop_time': stop_time.arrival_time})
             _idx += 1  
         return TripTimetable(self.trip.stops, self.trip, timetable)
@@ -60,15 +61,24 @@ class CorrdidorTimetableConstructor:
     def __call__(self) -> None: return self.build()
     def build(self) -> CorridorTimetable:
         trip_timetables = [TripTimetableConstructor(trip).build() for route in self.corridor.routes for trip in route.trips]
-        unique_stops = list(set(self.corridor.pull_stops()))
-        timetable = []
-        for stop in unique_stops:
-            timetable.append({trip_timetable.trip.trip_id: trip_timetable.data[i]['stop_time'] if trip_timetable.data[i]['stop_id'] == stop.stop_id else None for trip_timetable in trip_timetables for i in range(len(trip_timetable.data))})
-        return CorridorTimetable(unique_stops, self.corridor.pull_trips(), timetable)
+        timetable: list[dict] = []
+        _idx = 0
+        for stop_time in self.corridor.pull_stop_times():
+            timetable.append({trip_timetable.trip.trip_id: trip_timetable.data[i]['stop_time'] if trip_timetable.data[i]['stop_id'] == stop_time.stop_id and trip_timetable.data[i]['trip_id'] == stop_time.trip_id else 0 for trip_timetable in trip_timetables for i in range(len(trip_timetable.data))})
+            stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
+            timetable[_idx].update({'stop_id': stop.stop_id,
+                                    'stop_name': stop.stop_name, 
+                                    'stop_latitude': stop.stop_latitude, 
+                                    'stop_longitude': stop.stop_longitude, 
+                                    'settlement': stop.settlement,
+                                    'county': stop.county,
+                                    })
+            _idx += 1
+        return CorridorTimetable(self.corridor.pull_stops(), self.corridor.pull_trips(), timetable)
 
 if __name__ == "__main__":
     loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
     c = CorridorConstructor(1, 'test', ['2991_37732', '2990_40267', '3038_40330'], loader).build()
     ct = CorrdidorTimetableConstructor(c).build()
-    ct = ct.sort_by_time()
+    #ct.sort_by_time()
     ct.to_csv('corridor_timetable.csv')

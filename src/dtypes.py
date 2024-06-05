@@ -6,6 +6,7 @@ from typing import Optional, Union, Self, Generator
 from itertools import chain
 import csv
 import re
+import time
 
 class DayOfWeek(Enum):
     MON = 0
@@ -158,9 +159,8 @@ class CorridorTimetable:
         return NotImplementedError
 
     def sort_by_time(self, ascending: bool = True) -> Self:
-        tf = re.compile(r'\d{2}:\d{2}:\d{2}')
-        row_mins = [min(TimeTransforms.ts_val(v) for v in row.values() if v is str and tf.match(v)) for row in self.data]
-        print(row_mins)
+        row_mins = [min([TimeTransforms.ts_val(v) for v in row.values() if isinstance(v, str)] + [0]) for row in self.data]
+        #TODO: IMPLEMENT SORT
 
     def to_csv(self, file_path: str) -> ...:
         with open(file_path, 'w', newline='') as f:
@@ -168,3 +168,12 @@ class CorridorTimetable:
             writer.writeheader()
             for row_data in self.data:
                 writer.writerow(row_data)
+
+
+    #TODO: FINISH THIS
+    def _clean_rows(self):
+        for row in self.data:
+            form = re.compile()
+            kvs = [TimeTransforms.ts_to_float(v) for v in row.values() if TimeTransforms._is_t(v)]
+            if sum(kvs)
+        self.data = [i for i in self.data if list(i.values())[:-6]]
