@@ -1,0 +1,14 @@
+stop_id,stop_name,stop_latitude,stop_longitude,settlement,county,stop_sequence,trip_id,stop_time
+8440B352051,Waterford College,52.25836847,-7.109229047,Waterford city and suburbs,County_Waterford,1,3149_8,17:00:00
+8440B3525301,SETU College Street,52.25330938,-7.115423371,Waterford city and suburbs,County_Waterford,2,3149_8,17:05:00
+8440B7845201,WCIT0,52.24506725,-7.138607415,Waterford city and suburbs,County_Waterford,3,3149_8,17:15:00
+8270B332881,Mooncoin,52.29593379,-7.260446948,Mooncoin,County_Kilkenny,4,3149_8,17:40:00
+8270B3580902,Fiddown,52.33166404,-7.314123947,Fiddown,County_Kilkenny,5,3149_8,17:47:00
+8270B331981,Piltown,52.35115221,-7.331524857,Piltown,County_Kilkenny,6,3149_8,18:00:00
+8430B331971,Dunbane Road,52.34999045,-7.396229627,Carrick-on-Suir,County_Tipperary,7,3149_8,18:05:00
+8430B3511101,Pill Road,52.34794004,-7.408469316,Carrick-on-Suir,County_Tipperary,8,3149_8,18:08:00
+8430B331931,Sean Treacy Park,52.34849752,-7.423051572,Carrick-on-Suir,County_Tipperary,9,3149_8,18:10:00
+8430B3580602,Kilsheelan,52.3612582,-7.580026189,Kilsheelan,County_Tipperary,10,3149_8,18:20:00
+843000010,Cuirt An Rí,52.36173272,-7.693469748,Clonmel,County_Tipperary,11,3149_8,18:30:00
+843000044,Abbey Meadows,52.35537788,-7.734309149,Clonmel,County_Tipperary,12,3149_8,18:35:00
+8430B331911,Clonmel Showgrounds,52.35504313,-7.692635244,Clonmel,County_Tipperary,13,3149_8,18:40:00

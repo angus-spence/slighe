@@ -99,7 +99,7 @@ class Corridor:
     def pull_stop_times(self) -> list[StopTime]: return list(chain.from_iterable(list(chain.from_iterable([[[trip.stop_times[i] for i in range(len(trip.stop_times))] for trip in route.trips] for route in self.routes]))))
     def pull_trips(self) -> list[Trip]: return list(chain.from_iterable([route.trips for route in self.routes]))
 
-@dataclass(frozen=True)
+@dataclass(repr=False)
 class TripTimetable:
     stops: list[Stop]
     trip: Trip
@@ -134,7 +134,7 @@ class TripTimetable:
             for row_data in self.data:
                 writer.writerow(row_data)
 
-@dataclass(frozen=True)
+@dataclass(repr=False)
 class CorridorTimetable:
     stops: list[Stop]
     trips: list[Trip]
@@ -159,8 +159,7 @@ class CorridorTimetable:
         return NotImplementedError
 
     def sort_by_time(self, ascending: bool = True) -> Self:
-        row_mins = [min([TimeTransforms.ts_val(v) for v in row.values() if isinstance(v, str)] + [0]) for row in self.data]
-        #TODO: IMPLEMENT SORT
+        self.data = sorted(self.data, key=lambda x: min(v for v in x.values() if TimeTransforms._is_t(v)))
 
     def to_csv(self, file_path: str) -> ...:
         with open(file_path, 'w', newline='') as f:
@@ -169,11 +168,13 @@ class CorridorTimetable:
             for row_data in self.data:
                 writer.writerow(row_data)
 
-
-    #TODO: FINISH THIS
-    def _clean_rows(self):
-        for row in self.data:
-            form = re.compile()
-            kvs = [TimeTransforms.ts_to_float(v) for v in row.values() if TimeTransforms._is_t(v)]
-            if sum(kvs)
-        self.data = [i for i in self.data if list(i.values())[:-6]]
+    def _clean_rows(self) -> None:
+        _removed, _len = 0, len(self.data)
+        rm = []
+        for row in self.data: 
+            if not abs(sum([TimeTransforms.ts_to_float(v, "%H:%M:%S") for v in row.values() if TimeTransforms._is_t(v)])) > 0: 
+                rm.append(row)
+                _removed += 1
+        for row in rm:
+            self.data.remove(row)
+        print(f'REMOVED {_removed}/{_len} ROWS')

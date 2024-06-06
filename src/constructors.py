@@ -63,7 +63,9 @@ class CorrdidorTimetableConstructor:
         trip_timetables = [TripTimetableConstructor(trip).build() for route in self.corridor.routes for trip in route.trips]
         timetable: list[dict] = []
         _idx = 0
+        timetable = []
         for stop_time in self.corridor.pull_stop_times():
+            # TODO: THIS NEEDS TO BE FIXED
             timetable.append({trip_timetable.trip.trip_id: trip_timetable.data[i]['stop_time'] if trip_timetable.data[i]['stop_id'] == stop_time.stop_id and trip_timetable.data[i]['trip_id'] == stop_time.trip_id else 0 for trip_timetable in trip_timetables for i in range(len(trip_timetable.data))})
             stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
             timetable[_idx].update({'stop_id': stop.stop_id,
@@ -79,6 +81,9 @@ class CorrdidorTimetableConstructor:
 if __name__ == "__main__":
     loader = dload.GTFSLoadCSV('./data/agency.csv', './data/calendar.csv', './data/calendar_dates.csv', './data/routes.csv', './data/stop_times.csv', './data/stops.csv', './data/trips.csv')
     c = CorridorConstructor(1, 'test', ['2991_37732', '2990_40267', '3038_40330'], loader).build()
+    for route in c.routes:
+        for trip in route.trips:
+            TripTimetableConstructor(trip).build().to_csv(f'./tests/{trip.trip_id}.csv')
     ct = CorrdidorTimetableConstructor(c).build()
-    #ct.sort_by_time()
-    ct.to_csv('corridor_timetable.csv')
+    #ct._clean_rows()
+    ct.to_csv('./tests/corridor_timetable.csv')

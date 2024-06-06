@@ -27,6 +27,6 @@ class TimeTransforms:
     
     @staticmethod
     def _is_t(value: str) -> bool:
-        try: time.strptime(value, '%HH:%MM:%SS')
+        try: time.strptime(value, '%H:%M:%S')
         except: return False
         else: return True
