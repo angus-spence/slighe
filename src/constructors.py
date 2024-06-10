@@ -61,12 +61,9 @@ class CorrdidorTimetableConstructor:
     def __call__(self) -> None: return self.build()
     def build(self) -> CorridorTimetable:
         trip_timetables = [TripTimetableConstructor(trip).build() for route in self.corridor.routes for trip in route.trips]
-        timetable: list[dict] = []
+        timetable = [dict(zip(self.corridor.routes[0].trips[0].stops[0].__dict__.keys(), [0 for _ in range(len(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()))]) for _ in self.corridor.pull_stop_times())]
         _idx = 0
-        timetable = []
         for stop_time in self.corridor.pull_stop_times():
-            # TODO: THIS NEEDS TO BE FIXED
-            timetable.append({trip_timetable.trip.trip_id: trip_timetable.data[i]['stop_time'] if trip_timetable.data[i]['stop_id'] == stop_time.stop_id and trip_timetable.data[i]['trip_id'] == stop_time.trip_id else 0 for trip_timetable in trip_timetables for i in range(len(trip_timetable.data))})
             stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
             timetable[_idx].update({'stop_id': stop.stop_id,
                                     'stop_name': stop.stop_name, 
@@ -74,6 +71,7 @@ class CorrdidorTimetableConstructor:
                                     'stop_longitude': stop.stop_longitude, 
                                     'settlement': stop.settlement,
                                     'county': stop.county,
+                                    'stop_time': stop_time.arrival_time
                                     })
             _idx += 1
         return CorridorTimetable(self.corridor.pull_stops(), self.corridor.pull_trips(), timetable)
