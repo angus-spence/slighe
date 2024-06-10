@@ -17,7 +17,7 @@ def _build_timetables(corridors: dict) -> list[Corridor]:
                          './data/stops.csv', 
                          './data/trips.csv')
     for corridor_id, routes in corridors.items():
-        corridor = CorridorConstructor(corridor_id, "", routes)
+        corridor = CorridorConstructor(corridor_id, "", routes, loader)
         corridor_timetable = CorrdidorTimetableConstructor(corridor).build()
         corridor_timetable.to_csv(f'./data/{corridor.corridor_name}_timetable.csv')
 
