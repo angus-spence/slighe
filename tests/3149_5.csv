@@ -1,3 +1,0 @@
-stop_id,stop_name,stop_latitude,stop_longitude,settlement,county,stop_sequence,trip_id,stop_time
-8400B609701,Parnell Street,52.65853459,-8.626001751,Limerick city and suburbs,County_Limerick,1,3149_5,20:50:00
-8440B7845201,WCIT0,52.24506725,-7.138607415,Waterford city and suburbs,County_Waterford,2,3149_5,23:00:00

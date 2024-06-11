@@ -40,7 +40,7 @@ class TripTimetableConstructor:
     def __init__(self, trip: Trip) -> None: self.trip = trip
     def __call__(self) -> TripTimetable: return self.build()
     def build(self) -> TripTimetable:
-        timetable = [dict(zip(self.trip.stops[0].__dict__.keys(), [0 for _ in range(len(self.trip.stops[0].__dict__.keys()))])) for _ in self.trip.stop_times]
+        timetable = [dict(zip(self.trip.stops[0].__dict__.keys(), [0 for _ in len(self.trip.stops[0].__dict__.keys())])) for _ in self.trip.stop_times]
         _idx = 0
         for stop_time in self.trip.stop_times:
             stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.trip.stops))
@@ -60,8 +60,7 @@ class CorrdidorTimetableConstructor:
     def __init__(self, corridor: Corridor) -> None: self.corridor = corridor
     def __call__(self) -> None: return self.build()
     def build(self) -> CorridorTimetable:
-        trip_timetables = [TripTimetableConstructor(trip).build() for route in self.corridor.routes for trip in route.trips]
-        timetable = [dict(zip(self.corridor.routes[0].trips[0].stops[0].__dict__.keys(), [0 for _ in range(len(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()))]) for _ in self.corridor.pull_stop_times())]
+        timetable = [dict(zip(list(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()) + [trip.trip_id for trip in self.corridor.pull_trips()], [0 for _ in range(len(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()) + len(self.corridor.pull_trips()))])) for _ in self.corridor.pull_stop_times()]
         _idx = 0
         for stop_time in self.corridor.pull_stop_times():
             stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
@@ -71,7 +70,7 @@ class CorrdidorTimetableConstructor:
                                     'stop_longitude': stop.stop_longitude, 
                                     'settlement': stop.settlement,
                                     'county': stop.county,
-                                    'stop_time': stop_time.arrival_time
+                                    stop_time.trip_id: stop_time.arrival_time
                                     })
             _idx += 1
         return CorridorTimetable(self.corridor.pull_stops(), self.corridor.pull_trips(), timetable)

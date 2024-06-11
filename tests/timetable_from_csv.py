@@ -17,9 +17,9 @@ def _build_timetables(corridors: dict) -> list[Corridor]:
                          './data/stops.csv', 
                          './data/trips.csv')
     for corridor_id, routes in corridors.items():
-        corridor = CorridorConstructor(corridor_id, "", routes, loader)
+        corridor = CorridorConstructor(corridor_id, "", routes, loader).build()
         corridor_timetable = CorrdidorTimetableConstructor(corridor).build()
-        corridor_timetable.to_csv(f'./data/{corridor.corridor_name}_timetable.csv')
+        corridor_timetable.to_csv(f'./tests/{corridor.corridor_id}_timetable.csv')
 
 def _get_corridors(corridor_csv) -> dict:
     with open(corridor_csv, "r", encoding='utf_8_sig') as f:
@@ -31,6 +31,7 @@ def _get_corridors(corridor_csv) -> dict:
         corridors = dict(zip(corridor_ids, [[0] for _ in corridor_ids]))
         for row in data:
             corridors[row['corridor_id']].append(row['route_id'])
+    return corridors
 
 if __name__ == "__main__":
     main('data\corridor.csv')

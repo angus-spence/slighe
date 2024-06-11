@@ -1,4 +1,0 @@
-stop_id,stop_name,stop_latitude,stop_longitude,settlement,county,stop_sequence,trip_id,stop_time
-8540B1560001,St Louis School,54.24545101,-6.971501527,Monaghan,County_Monaghan,1,2990_1,07:45:00
-854000008,Waters Filling Station,54.11554063,-6.733279044,Castleblayney,County_Monaghan,2,2990_1,08:05:00
-8300B109221,O'Fiaich College,53.98657385,-6.392770433,Dundalk,County_Louth,3,2990_1,08:45:00
