@@ -63,7 +63,8 @@ class CorrdidorTimetableConstructor:
         timetable = [dict(zip(list(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()) + [trip.trip_id for trip in self.corridor.pull_trips()], [0 for _ in range(len(self.corridor.routes[0].trips[0].stops[0].__dict__.keys()) + len(self.corridor.pull_trips()))])) for _ in self.corridor.pull_stop_times()]
         _idx = 0
         for stop_time in self.corridor.pull_stop_times():
-            stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
+            try: stop = next(filter(lambda x: x.stop_id == stop_time.stop_id, self.corridor.pull_stops()))
+            except: continue
             timetable[_idx].update({'stop_id': stop.stop_id,
                                     'stop_name': stop.stop_name, 
                                     'stop_latitude': stop.stop_latitude, 
