@@ -138,7 +138,7 @@ class TripTimetable:
 class CorridorTimetable:
     stops: list[Stop]
     trips: list[Trip]
-    data: list[dict]
+    timetable: list[dict]
 
     def filter_by(self, 
                 time: tuple[Optional[Union[str, float]]] = None,
@@ -159,22 +159,22 @@ class CorridorTimetable:
         return NotImplementedError
 
     def sort_by_time(self, ascending: bool = True) -> Self:
-        self.data = sorted(self.data, key=lambda x: min(v for v in x.values() if TimeTransforms._is_t(v)))
+        self.data = sorted(self.timetable, key=lambda x: min(v for v in x.values() if TimeTransforms._is_t(v)))
 
     def to_csv(self, file_path: str) -> ...:
         with open(file_path, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=list(self.data[0].keys()))
+            writer = csv.DictWriter(f, fieldnames=list(self.timetable[0].keys()))
             writer.writeheader()
-            for row_data in self.data:
+            for row_data in self.timetable:
                 writer.writerow(row_data)
 
     def _clean_rows(self) -> None:
-        _removed, _len = 0, len(self.data)
+        _removed, _len = 0, len(self.timetable)
         rm = []
-        for row in self.data: 
+        for row in self.timetable: 
             if not abs(sum([TimeTransforms.ts_to_float(v, "%H:%M:%S") for v in row.values() if TimeTransforms._is_t(v)])) > 0: 
                 rm.append(row)
                 _removed += 1
         for row in rm:
-            self.data.remove(row)
+            self.timetable.remove(row)
         print(f'REMOVED {_removed}/{_len} ROWS')

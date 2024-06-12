@@ -19,7 +19,9 @@ def _build_timetables(corridors: dict) -> list[Corridor]:
     for corridor_id, routes in corridors.items():
         corridor = CorridorConstructor(corridor_id, "", routes, loader).build()
         corridor_timetable = CorrdidorTimetableConstructor(corridor).build()
-        corridor_timetable.to_csv(f'./tests/outputs/{corridor.corridor_id}_timetable.csv')
+        #corridor_timetable.sort_by_time()
+        if len(corridor_timetable.timetable) < 1: continue
+        else: corridor_timetable.to_csv(f'./tests/outputs/{corridor.corridor_id}_timetable.csv')
 
 def _get_corridors(corridor_csv) -> dict:
     with open(corridor_csv, "r", encoding='utf_8_sig') as f:
