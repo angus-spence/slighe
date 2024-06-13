@@ -1,19 +1,3 @@
-from dtypes import Stop, StopTime, Corridor, ServiceTypes, TripTimetable
-
-from dataclasses import dataclass
-from typing import Optional, Union
-from itertools import chain
-import functools
-
-@dataclass(repr=False)
-class CorridorOps:
-    corridor: Corridor
-
-    #TODO:
-    #       - Add a filter for the settlement    
-    #       - A Timetable should just be for a single trip_id
-    #       - Add stop_sequence to the timetable
-
-
-if __name__ == "__main__":
-    pass
+version https://git-lfs.github.com/spec/v1
+oid sha256:0659c805d3bf2cc1088920fd18b63c2982b47c852aa9019e0510acd0d8a2d5fb
+size 464

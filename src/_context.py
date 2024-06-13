@@ -1,17 +1,3 @@
-from typing import Generator
-import contextlib
-import time
-
-@contextlib.contextmanager
-def timing(fnc_name: str) -> Generator[None, None, None]:
-    t0 = time.monotonic()
-    try: yield
-    finally: print(f'LOG: {fnc_name} took {round(time.monotonic() - t0, 4)} SECONDS')
-
-@contextlib.contextmanager
-def vector_op(x: list[float], y: list[float]) -> list[float]:
-    return NotImplementedError
-
-@contextlib.contextmanager
-def multithread_load_op() -> None:
-    return NotImplementedError
+version https://git-lfs.github.com/spec/v1
+oid sha256:8ecfe323cd0fed95b373648fb47f8589d6edd4d6a62189492006e89794b4a13b
+size 534
